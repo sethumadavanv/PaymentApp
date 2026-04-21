@@ -1,0 +1,16 @@
+# Maven
+backend/target/
+backend/*.iml
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iws
+*.ipr
+
+# macOS
+.DS_Store
+
+# Logs
+*.log

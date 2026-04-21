@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PaymentApp</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+    }
+
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 { font-size: 1.3rem; letter-spacing: 1px; }
+    header span { font-size: 0.85rem; opacity: 0.6; }
+
+    .container { max-width: 960px; margin: 32px auto; padding: 0 16px; }
+
+    /* Offers strip */
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    .offers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+
+    .offer-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .offer-card::after {
+      content: "";
+      position: absolute;
+      right: -20px; top: -20px;
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+    }
+
+    .offer-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      margin-bottom: 10px;
+    }
+
+    .offer-card h3 { font-size: 1rem; margin-bottom: 6px; }
+    .offer-card p  { font-size: 0.82rem; opacity: 0.85; }
+
+    /* Transactions table */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+      text-align: left;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #aaa;
+      padding: 0 12px 12px;
+    }
+
+    td {
+      padding: 13px 12px;
+      font-size: 0.88rem;
+      border-top: 1px solid #f3f3f3;
+    }
+
+    .category-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .cat-Shopping      { background: #e8f4ff; color: #1a7bbd; }
+    .cat-Food          { background: #fff3e0; color: #d07a00; }
+    .cat-Fuel          { background: #fce4ec; color: #c62828; }
+    .cat-Entertainment { background: #f3e5f5; color: #7b1fa2; }
+    .cat-Groceries     { background: #e8f5e9; color: #2e7d32; }
+
+    .amount { font-weight: 600; color: #1a1a2e; }
+
+    .loading { text-align: center; color: #aaa; padding: 32px; }
+    .error   { text-align: center; color: #e53935; padding: 32px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>PaymentApp</h1>
+  <span>Smart Spend Dashboard</span>
+</header>
+
+<div class="container">
+
+  <!-- Personalised Offers -->
+  <p class="section-title">Personalised Offers for You</p>
+  <div class="offers-grid" id="offers-grid">
+    <div class="loading">Loading offers…</div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <p class="section-title">Recent Transactions</p>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Merchant</th>
+          <th>Category</th>
+          <th style="text-align:right">Amount (SGD)</th>
+        </tr>
+      </thead>
+      <tbody id="tx-body">
+        <tr><td colspan="4" class="loading">Loading transactions…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const API = 'http://localhost:8080/api';
+
+  async function loadOffers() {
+    const grid = document.getElementById('offers-grid');
+    try {
+      const res  = await fetch(`${API}/offers`);
+      const data = await res.json();
+      if (!data.length) { grid.innerHTML = '<p class="loading">No offers right now.</p>'; return; }
+      grid.innerHTML = data.map(o => `
+        <div class="offer-card">
+          <span class="offer-badge">${o.discount}</span>
+          <h3>${o.title}</h3>
+          <p>${o.description}</p>
+        </div>`).join('');
+    } catch {
+      grid.innerHTML = '<p class="error">Could not load offers. Is the backend running?</p>';
+    }
+  }
+
+  async function loadTransactions() {
+    const tbody = document.getElementById('tx-body');
+    try {
+      const res  = await fetch(`${API}/transactions`);
+      const data = await res.json();
+      tbody.innerHTML = data.map(t => `
+        <tr>
+          <td>${t.date}</td>
+          <td>${t.merchant}</td>
+          <td><span class="category-pill cat-${t.category}">${t.category}</span></td>
+          <td class="amount" style="text-align:right">$${t.amount.toFixed(2)}</td>
+        </tr>`).join('');
+    } catch {
+      tbody.innerHTML = '<tr><td colspan="4" class="error">Could not load transactions. Is the backend running?</td></tr>';
+    }
+  }
+
+  loadOffers();
+  loadTransactions();
+</script>
+</body>
+</html>
