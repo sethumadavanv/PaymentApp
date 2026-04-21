@@ -1,6 +1,7 @@
 package com.paymentapp.service;
 
 import com.paymentapp.model.Transaction;
+import com.paymentapp.model.TransactionRequest;
 import com.paymentapp.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -35,5 +36,15 @@ public class TransactionService implements CommandLineRunner {
 
     public List<Transaction> getAllTransactions() {
         return repository.findAll();
+    }
+
+    public Transaction addTransaction(TransactionRequest request) {
+        Transaction tx = new Transaction(
+            request.getMerchant(),
+            request.getCategory(),
+            request.getAmount(),
+            request.getDate()
+        );
+        return repository.save(tx);
     }
 }

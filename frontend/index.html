@@ -21,13 +21,11 @@
       align-items: center;
       justify-content: space-between;
     }
-
     header h1 { font-size: 1.3rem; letter-spacing: 1px; }
     header span { font-size: 0.85rem; opacity: 0.6; }
 
     .container { max-width: 960px; margin: 32px auto; padding: 0 16px; }
 
-    /* Offers strip */
     .section-title {
       font-size: 0.75rem;
       text-transform: uppercase;
@@ -36,6 +34,7 @@
       margin-bottom: 12px;
     }
 
+    /* ── Offers ── */
     .offers-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
@@ -50,8 +49,9 @@
       padding: 20px;
       position: relative;
       overflow: hidden;
+      transition: transform 0.2s, opacity 0.3s;
     }
-
+    .offer-card.refreshing { opacity: 0.4; transform: scale(0.97); }
     .offer-card::after {
       content: "";
       position: absolute;
@@ -60,7 +60,6 @@
       border-radius: 50%;
       background: rgba(255,255,255,0.12);
     }
-
     .offer-badge {
       display: inline-block;
       background: rgba(255,255,255,0.25);
@@ -69,20 +68,63 @@
       font-size: 0.72rem;
       margin-bottom: 10px;
     }
-
     .offer-card h3 { font-size: 1rem; margin-bottom: 6px; }
     .offer-card p  { font-size: 0.82rem; opacity: 0.85; }
 
-    /* Transactions table */
+    /* ── Add transaction form ── */
     .card {
       background: #fff;
       border-radius: 14px;
       padding: 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      margin-bottom: 24px;
     }
 
-    table { width: 100%; border-collapse: collapse; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
 
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
+
+    .form-group input,
+    .form-group select {
+      padding: 9px 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group select:focus { border-color: #667eea; }
+
+    .btn-add {
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-size: 0.88rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-add:hover    { background: #667eea; }
+    .btn-add:disabled { background: #aaa; cursor: not-allowed; }
+
+    .form-error {
+      color: #e53935;
+      font-size: 0.8rem;
+      margin-top: 8px;
+      min-height: 1em;
+    }
+
+    /* ── Transactions table ── */
+    table { width: 100%; border-collapse: collapse; }
     th {
       text-align: left;
       font-size: 0.72rem;
@@ -91,11 +133,12 @@
       color: #aaa;
       padding: 0 12px 12px;
     }
+    td { padding: 13px 12px; font-size: 0.88rem; border-top: 1px solid #f3f3f3; }
 
-    td {
-      padding: 13px 12px;
-      font-size: 0.88rem;
-      border-top: 1px solid #f3f3f3;
+    tr.new-row td { animation: highlight 1.4s ease-out; }
+    @keyframes highlight {
+      0%   { background: #eef0ff; }
+      100% { background: transparent; }
     }
 
     .category-pill {
@@ -105,15 +148,13 @@
       font-size: 0.72rem;
       font-weight: 600;
     }
-
     .cat-Shopping      { background: #e8f4ff; color: #1a7bbd; }
     .cat-Food          { background: #fff3e0; color: #d07a00; }
     .cat-Fuel          { background: #fce4ec; color: #c62828; }
     .cat-Entertainment { background: #f3e5f5; color: #7b1fa2; }
     .cat-Groceries     { background: #e8f5e9; color: #2e7d32; }
 
-    .amount { font-weight: 600; color: #1a1a2e; }
-
+    .amount { font-weight: 600; }
     .loading { text-align: center; color: #aaa; padding: 32px; }
     .error   { text-align: center; color: #e53935; padding: 32px; }
   </style>
@@ -131,6 +172,38 @@
   <p class="section-title">Personalised Offers for You</p>
   <div class="offers-grid" id="offers-grid">
     <div class="loading">Loading offers…</div>
+  </div>
+
+  <!-- Add Transaction -->
+  <p class="section-title">Add Transaction</p>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Merchant</label>
+        <input id="f-merchant" type="text" placeholder="e.g. Starbucks" />
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="f-category">
+          <option value="">Select…</option>
+          <option>Shopping</option>
+          <option>Food</option>
+          <option>Fuel</option>
+          <option>Entertainment</option>
+          <option>Groceries</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Amount (SGD)</label>
+        <input id="f-amount" type="number" min="0.01" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input id="f-date" type="date" />
+      </div>
+      <button class="btn-add" id="btn-add" onclick="submitTransaction()">Add</button>
+    </div>
+    <div class="form-error" id="form-error"></div>
   </div>
 
   <!-- Recent Transactions -->
@@ -156,8 +229,12 @@
 <script>
   const API = 'http://localhost:8080/api';
 
-  async function loadOffers() {
+  // Set date input default to today
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+
+  async function loadOffers(animate) {
     const grid = document.getElementById('offers-grid');
+    if (animate) grid.querySelectorAll('.offer-card').forEach(c => c.classList.add('refreshing'));
     try {
       const res  = await fetch(`${API}/offers`);
       const data = await res.json();
@@ -173,25 +250,76 @@
     }
   }
 
-  async function loadTransactions() {
+  async function loadTransactions(highlightId) {
     const tbody = document.getElementById('tx-body');
     try {
       const res  = await fetch(`${API}/transactions`);
       const data = await res.json();
       tbody.innerHTML = data.map(t => `
-        <tr>
+        <tr${highlightId && t.id === highlightId ? ' class="new-row"' : ''}>
           <td>${t.date}</td>
           <td>${t.merchant}</td>
           <td><span class="category-pill cat-${t.category}">${t.category}</span></td>
           <td class="amount" style="text-align:right">$${t.amount.toFixed(2)}</td>
         </tr>`).join('');
     } catch {
-      tbody.innerHTML = '<tr><td colspan="4" class="error">Could not load transactions. Is the backend running?</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="error">Could not load transactions.</td></tr>';
     }
   }
 
-  loadOffers();
-  loadTransactions();
+  async function submitTransaction() {
+    const merchant = document.getElementById('f-merchant').value.trim();
+    const category = document.getElementById('f-category').value;
+    const amount   = parseFloat(document.getElementById('f-amount').value);
+    const date     = document.getElementById('f-date').value;
+    const errEl    = document.getElementById('form-error');
+    const btn      = document.getElementById('btn-add');
+
+    errEl.textContent = '';
+    if (!merchant)          { errEl.textContent = 'Merchant is required.'; return; }
+    if (!category)          { errEl.textContent = 'Please select a category.'; return; }
+    if (!amount || amount <= 0) { errEl.textContent = 'Enter a valid amount.'; return; }
+    if (!date)              { errEl.textContent = 'Date is required.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Adding…';
+
+    try {
+      const res = await fetch(`${API}/transactions`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ merchant, category, amount, date })
+      });
+
+      if (!res.ok) throw new Error('Server error');
+
+      const saved = await res.json();
+
+      // Reset form
+      document.getElementById('f-merchant').value = '';
+      document.getElementById('f-category').value = '';
+      document.getElementById('f-amount').value   = '';
+      document.getElementById('f-date').value     = new Date().toISOString().split('T')[0];
+
+      // Refresh both panels — highlight new row, animate offer re-rank
+      await Promise.all([
+        loadTransactions(saved.id),
+        loadOffers(true)
+      ]);
+    } catch {
+      errEl.textContent = 'Failed to add transaction. Is the backend running?';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Add';
+    }
+  }
+
+  // Allow Enter key on any form field to submit
+  document.querySelectorAll('#f-merchant, #f-category, #f-amount, #f-date')
+    .forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') submitTransaction(); }));
+
+  loadOffers(false);
+  loadTransactions(null);
 </script>
 </body>
 </html>
