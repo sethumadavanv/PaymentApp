@@ -49,9 +49,7 @@
       padding: 20px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.2s, opacity 0.3s;
     }
-    .offer-card.refreshing { opacity: 0.4; transform: scale(0.97); }
     .offer-card::after {
       content: "";
       position: absolute;
@@ -229,12 +227,11 @@
 <script>
   const API = 'http://localhost:8080/api';
 
-  // Set date input default to today
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  function todayStr() { return new Date().toISOString().split('T')[0]; }
+  document.getElementById('f-date').value = todayStr();
 
-  async function loadOffers(animate) {
+  async function loadOffers() {
     const grid = document.getElementById('offers-grid');
-    if (animate) grid.querySelectorAll('.offer-card').forEach(c => c.classList.add('refreshing'));
     try {
       const res  = await fetch(`${API}/offers`);
       const data = await res.json();
@@ -295,17 +292,12 @@
 
       const saved = await res.json();
 
-      // Reset form
       document.getElementById('f-merchant').value = '';
       document.getElementById('f-category').value = '';
       document.getElementById('f-amount').value   = '';
-      document.getElementById('f-date').value     = new Date().toISOString().split('T')[0];
+      document.getElementById('f-date').value     = todayStr();
 
-      // Refresh both panels — highlight new row, animate offer re-rank
-      await Promise.all([
-        loadTransactions(saved.id),
-        loadOffers(true)
-      ]);
+      await Promise.all([loadTransactions(saved.id), loadOffers()]);
     } catch {
       errEl.textContent = 'Failed to add transaction. Is the backend running?';
     } finally {
@@ -314,11 +306,11 @@
     }
   }
 
-  // Allow Enter key on any form field to submit
-  document.querySelectorAll('#f-merchant, #f-category, #f-amount, #f-date')
-    .forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') submitTransaction(); }));
+  document.querySelector('.form-row').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitTransaction();
+  });
 
-  loadOffers(false);
+  loadOffers();
   loadTransactions(null);
 </script>
 </body>
