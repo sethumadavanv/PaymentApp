@@ -1,23 +1,39 @@
 package com.paymentapp.model;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name = "transactions")
 public class Transaction {
-    private String id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
     private String merchant;
+
+    @Column(nullable = false)
     private String category;
+
+    @Column(nullable = false)
     private double amount;
+
+    @Column(nullable = false)
     private String date;
 
-    public Transaction(String id, String merchant, String category, double amount, String date) {
-        this.id = id;
+    protected Transaction() {}
+
+    public Transaction(String merchant, String category, double amount, String date) {
         this.merchant = merchant;
         this.category = category;
-        this.amount = amount;
-        this.date = date;
+        this.amount   = amount;
+        this.date     = date;
     }
 
-    public String getId() { return id; }
-    public String getMerchant() { return merchant; }
-    public String getCategory() { return category; }
-    public double getAmount() { return amount; }
-    public String getDate() { return date; }
+    public Long getId()        { return id; }
+    public String getMerchant(){ return merchant; }
+    public String getCategory(){ return category; }
+    public double getAmount()  { return amount; }
+    public String getDate()    { return date; }
 }
